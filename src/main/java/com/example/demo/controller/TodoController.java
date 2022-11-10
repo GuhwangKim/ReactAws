@@ -6,8 +6,10 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -81,4 +83,58 @@ public class TodoController {
 		return ResponseEntity.ok().body(response);
 	}
 	
+	@PutMapping
+	public ResponseEntity<?> updateTodo(@RequestBody TodoDTO dto){
+		String temporaryUserId = "temporary user";
+		
+		// 1) dto를 entity로 변환 
+		TodoEntity entity = TodoDTO.toEntity(dto);
+		
+		// 2) id를 temporaryUserId로 초기화 
+		entity.setUserId(temporaryUserId);
+		
+		// 3) 서비스를 이용해 entity 업데이트 
+		List<TodoEntity> entities = service.update(entity);
+		
+		// 4) 자바 스트림을 이용해 리턴된 엔티티 리스트를 todoDTO로 반환 
+		List<TodoDTO> dtos = entities.stream().map(TodoDTO::new).collect(Collectors.toList());
+		
+		// 5) ResponseDto로 변환 
+		ResponseDTO<TodoDTO> response = ResponseDTO.<TodoDTO>builder().data(dtos).build();
+		
+		// 6) 리턴 
+		return ResponseEntity.ok().body(response);
+	}
+	
+	@DeleteMapping
+	public ResponseEntity<?> deleteTodo(@RequestBody TodoDTO dto){
+		
+		try {
+			String temporaryUserId = "temporary user";
+			// 1) dto를 entity로 변환 
+			TodoEntity entity = TodoDTO.toEntity(dto);
+			
+			// 2) id를 temporaryUserId로 초기화 
+			entity.setUserId(temporaryUserId);
+			
+			// 3) 서비스를 이용해 entity 삭제 
+			List<TodoEntity> entities = service.delete(entity);
+			
+			// 4) 자바 스트림을 이용해 리턴된 엔티티 리스트를 todoDTO로 반환 
+			List<TodoDTO> dtos = entities.stream().map(TodoDTO::new).collect(Collectors.toList());
+			
+			// 5) ResponseDto로 변환 
+			ResponseDTO<TodoDTO> response = ResponseDTO.<TodoDTO>builder().data(dtos).build();
+			
+			// 6) 리턴 
+			return ResponseEntity.ok().body(response);
+			
+		} catch (Exception e) {
+			// 7) 혹시 예외가 있는 경우 dto 대신 error 메세지를 넣어 리턴 
+			String error = e.getMessage();
+			ResponseDTO<TodoDTO> response = ResponseDTO.<TodoDTO>builder().error(error).build();
+			return ResponseEntity.badRequest().body(response);	
+			
+		}
+	}
 }

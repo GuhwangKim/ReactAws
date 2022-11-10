@@ -62,7 +62,23 @@ public class TodoService {
 		return retrieve(entity.getUserId());
 	}
 		
-	
+	// Delete
+	public List<TodoEntity> delete(final TodoEntity entity) {
+		// 1) 저장할 entity가 있는지 확인 
+		validate(entity);
+		
+		try {
+		// 2) 엔티티 삭제 
+			repository.delete(entity);
+		} catch (Exception e) {
+		// 3) exception 발생시 id와 exception을 로깅 
+			log.error("error deleting entity", entity.getId(), e);
+		// 4) 컨트롤로러 exception을 보낸다. 
+			throw new RuntimeException("error deleting entity "+entity.getId());
+		}
+		// 5) 새 Todo리스트를 가져와 리턴 
+		return retrieve(entity.getUserId());
+	}
 	
 
 	// Refactoring 다른 메서드에서도 계속 쓰일 예정이여서 따로 method로 정리 
@@ -77,5 +93,6 @@ public class TodoService {
 			throw new RuntimeException("Unknown user");
 		}
 	}
+
 
 }
